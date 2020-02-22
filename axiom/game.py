@@ -1,14 +1,11 @@
+
 import random
 import re
 import copy
-
 ##### REGEX DEFS ######
 basic_action_regex = re.compile("^\+(.) (.*)$")
 
 #######################
-
-
-
 
 ################### CLASSES #########################
 class Game:
@@ -90,9 +87,11 @@ class Game:
     
 
 
+
 class Shop:
-    def __init__(self, my_supply_dict):
-        self.supply = my_supply_dict
+    def __init__(self, my_reset_fn):
+        self.reset_fn = my_reset_fn
+        self.supply = self.reset_fn()
         self.empty_piles = 0
 
     def get_cards_under_amount(self, amount):
@@ -102,6 +101,9 @@ class Shop:
                 if self.supply[x][0].cost <= amount:
                     cards_under_amount += [self.supply[x][0]]
         return cards_under_amount
+    
+    def reset_shop(self):
+        self.reset_fn()
 
 
 class Card:
@@ -117,14 +119,14 @@ class Card:
         self.name = my_name
 
 class Player:
-    def __init__(self, starting_deck, my_name, decision_dict):
+    def __init__(self, starting_deck, my_name, my_ai):
         self.my_deck = copy.deepcopy(starting_deck)
         self.name = my_name
         self.actions = 1
         self.buys = 1
         self.coins = 0
         self.game = None
-        self.decisions = decision_dict
+        self.ai = my_ai
 
     def count_points(self):
         total_points = 0
@@ -138,7 +140,7 @@ class Player:
 
     def play_actions(self, action_cards):
         if self.actions > 0 and action_cards != None:
-            action_to_play = self.decisions['action'](self.my_deck, action_cards)
+            action_to_play = self.ai.action_fn(self.my_deck, action_cards)
             if action_to_play.name != 'error': 
                 self.game.play_card(action_to_play)
                 self.actions -= 1
@@ -147,7 +149,7 @@ class Player:
     def buy_cards(self):
         self.coins += self.my_deck.calc_hand_value()
         if self.buys > 0:
-            card_to_buy = self.decisions['buy'](self.game.shop, self.my_deck, self.coins)
+            card_to_buy = self.ai.buy_fn(self.game.shop, self.my_deck, self.coins)
             if card_to_buy.name != 'error':
                 self.game.buy_card(card_to_buy)
                 self.coins -= card_to_buy.cost
@@ -156,7 +158,7 @@ class Player:
                 self.buy_cards()
 
     def choose_card_to_discard(self):
-        self.my_deck.discard(self.decisions['discard'](self.my_deck))
+        self.my_deck.discard(self.ai.discard_fn(self.my_deck))
         
     def cleanup(self):
         self.my_deck.cleanup_deck_actions()
@@ -226,188 +228,121 @@ class Deck:
             card_names += [x.name]
         return card_names
 
-#########################################################
-
-############# RANDOM DECISION FUNCTIONS #############
-imaginary_card = Card(None, 0, 0, 0, None, False, False, None, 'error')
-def random_action(_deck, _actions):
-    return random.choice(_actions + [imaginary_card])
-
-def random_discard(_deck):
-    return random.choice(_deck.hand)
-
-def random_discard_option(_deck):
-    return random.choice(_deck.hand + [imaginary_card])
-
-def random_buy(_shop, _deck, _coins):
-    cards_available = _shop.get_cards_under_amount(_coins)
-    return random.choice(cards_available + [imaginary_card])
-
-def random_trash(_self, _deck, _coins):
-    return random.choice(_deck.hand)
-
-def random_trash_for_treasure(_shop, _deck, _coins):
-    treasures = []
-    for x in _deck.hand:
-        if x.worth > 0:
-            treasures += [x]
-    treasures += [imaginary_card]
-    treasure_to_trash = random.choice(treasures)
-    return treasure_to_trash
-    
-def random_gain(_shop, _deck, _limit):
-    cards_available = _shop.get_cards_under_amount(_limit)
-    return random.choice(cards_available)
 
 
-randomania = {}
-randomania['discard'] = random_discard
-randomania['discard-option'] = random_discard_option
-randomania['buy'] = random_buy
-randomania['action'] = random_action
-randomania['trash'] = random_trash
-randomania['trash-treasure'] = random_trash_for_treasure
-randomania['gain'] = random_gain
 
-#####################################################
+
 
 ####### GAME CARDS (& thier additonal actions) ###########
+class ImaginaryCard(Card):
+    def __init__(self):
+        super().__init__(None, 0, 0, 0, None, False, False, None, 'error')
 
-copper = Card(None, 0, 0, 1, None, False, False, None, 'copper')
-silver = Card(None, 3, 0, 2, None, False, False, None, 'silver')
-gold = Card(None, 6, 0, 3, None, False, False, None, 'gold')
-curse = Card(None, 0, -1, 0, None, False, False, None, 'curse')
-estate = Card(None, 2, 1, 0, None, False, False, None, 'estate')
-duchy = Card(None, 5, 3, 0, None, False, False, None, 'duchy')
-province = Card(None, 8, 6, 0, None, False, False, None, 'province')
+class Copper(Card):
+    def __init__(self):
+        super().__init__(None, 0, 0, 1, None, False, False, None, 'copper')
+
+class Silver(Card):
+    def __init__(self):
+        super().__init__(None, 3, 0, 2, None, False, False, None, 'silver')
+
+class Gold(Card):
+    def __init__(self):
+        super().__init__(None, 6, 0, 3, None, False, False, None, 'gold')
+
+class Curse(Card):
+    def __init__(self):
+        super().__init__(None, 0, -1, 0, None, False, False, None, 'curse')
+
+class Estate(Card):
+    def __init__(self):
+        super().__init__(None, 2, 1, 0, None, False, False, None, 'estate')
+
+class Duchy(Card):
+    def __init__(self):
+        super().__init__(None, 5, 3, 0, None, False, False, None, 'duchy')
+
+class Province(Card):
+    def __init__(self):
+        super().__init__(None, 8, 6, 0, None, False, False, None, 'province')
 
 def cellar_action(my_game):
     cur_player = my_game.active_player
     cards_to_discard = []
-    targ_card = random_discard_option(cur_player.my_deck)
+    targ_card = my_game.active_player.ai.discard_option_fn(cur_player.my_deck)
     while targ_card.name != 'error':
         cards_to_discard += [targ_card]
         cur_player.my_deck.discard(targ_card)
-        targ_card = random_discard_option(cur_player.my_deck)
+        targ_card = my_game.active_player.ai.discard_option_fn(cur_player.my_deck)
     cur_player.my_deck.draw(len(cards_to_discard))
 
-cellar = Card(['+1 Action'], 2, 0, 0, cellar_action, False, False, None, 'cellar')
-market = Card(['+1 Card', '+1 Action', '+1 Buy', '+1 Coin'], 5, 0, 0, None, False, False, None, 'market')
+class Cellar(Card):
+    def __init__(self):
+        super().__init__(['+1 Action'], 2, 0, 0, cellar_action, False, False, None, 'cellar')
+
+class Market(Card):
+    def __init__(self):
+        super().__init__(['+1 Card', '+1 Action', '+1 Buy', '+1 Coin'], 5, 0, 0, None, False, False, None, 'market')
 
 def merchant_action(my_game):
     cur_player = my_game.active_player
-    if silver in cur_player.my_deck.hand:
+    if Silver in cur_player.my_deck.hand:
         my_game.process_card_actions(['+1 Coin'], None)
 
-merchant = Card(['+1 Card', '+1 Action'], 3, 0, 0, merchant_action, False, False, None, 'merchant')
+class Merchant(Card):
+    def __init__(self):
+        super().__init__(['+1 Card', '+1 Action'], 3, 0, 0, merchant_action, False, False, None, 'merchant')
 
 def militia_action(my_game, target_player):
     while len(target_player.my_deck.hand) > 3:
         target_player.choose_card_to_discard()
 
-militia = Card(['+2 Coins'], 4, 0, 0, militia_action, True, False, None, 'militia')
+class Militia(Card):
+    def __init__(self):
+        super().__init__(['+2 Coins'], 4, 0, 0, militia_action, True, False, None, 'militia')
 
 def mine_action(my_game):
     card_to_trash = my_game.active_player.decisions['trash-treasure'](my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
     
     if card_to_trash.name != 'error':
         my_game.trash_card(card_to_trash)
-        card_to_gain = my_game.active_player.decisions['gain'](my_game.shop, my_game.active_player.my_deck, card_to_trash.cost + 3)
+        card_to_gain = my_game.active_player.ai.gain_fn(my_game.shop, my_game.active_player.my_deck, card_to_trash.cost + 3)
         my_game.gain_to_hand(card_to_gain)
 
-mine = Card([], 5, 0, 0, mine_action, False, False, None, 'mine')
+class Mine(Card):
+    def __init__(self):
+        super().__init__([], 5, 0, 0, mine_action, False, False, None, 'mine')
 
 def moat_reaction(my_game):
     return True
 
-moat = Card(['+2 Cards'], 2, 0, 0, None, False, True, moat_reaction, 'moat')
-
+class Moat(Card):
+    def __init__(self):
+        super().__init__(['+2 Cards'], 2, 0, 0, None, False, True, moat_reaction, 'moat')
+        
 def remodel_action(my_game):
-    card_to_trash = my_game.active_player.decisions['trash'](my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
+    card_to_trash = my_game.active_player.ai.trash_fn(my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
     my_game.trash_card(card_to_trash)
-    card_to_gain =  my_game.active_player.decisions['gain'](my_game.shop, my_game.active_player.my_deck, card_to_trash.cost + 2)
+    card_to_gain =  my_game.active_player.ai.gain_fn(my_game.shop, my_game.active_player.my_deck, card_to_trash.cost + 2)
     my_game.gain_to_hand(card_to_gain)
 
-remodel = Card([], 4, 0, 0, remodel_action, False, False, None, 'remodel')
-smithy = Card(['+3 Cards'], 4, 0, 0, None, False, False, None, 'smithy')
-village = Card(['+1 Card', '+2 Actions'], 3, 0, 0 , None, False, False, None, 'village')
+class Remodel(Card):
+    def __init__(self):
+        super().__init__([], 4, 0, 0, remodel_action, False, False, None, 'remodel')
+
+class Smithy(Card):
+    def __init__(self):
+        super().__init__(['+3 Cards'], 4, 0, 0, None, False, False, None, 'smithy')
+
+class Village(Card):
+    def __init__(self):
+        super().__init__(['+1 Card', '+2 Actions'], 3, 0, 0 , None, False, False, None, 'village')
 
 def workshop_action(my_game):
-    card_to_gain =  my_game.active_player.decisions['gain'](my_game.shop, my_game.active_player.my_deck, 4)
+    card_to_gain =  my_game.active_player.ai.gain_fn(my_game.shop, my_game.active_player.my_deck, 4)
     my_game.gain_to_hand(card_to_gain)
 
-workshop = Card([], 3, 0, 0, workshop_action, False, False, None, 'workshop')
-
+class Workshop(Card):
+    def __init__(self):
+        super().__init__([], 3, 0, 0, workshop_action, False, False, None, 'workshop')
 #####################################################
-
-
-
-GENERIC_STARTING_DECKS = [Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate]), Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate]), Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate]), Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate])]
-GENERIC_DECISION_DICT = randomania
-def reset_deck():
-    GENERIC_STARTING_DECKS = [Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate]), Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate]), Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate]), Deck([copper, copper, copper, copper, copper, copper, copper, estate, estate, estate])]
-
-################    SHOP    #########################
-shop_contents = {}
-def shop_reset():
-    shop_action_amount = 10
-    shop_vp_amount = 12
-    shop_contents['copper'] = [copper, 60]
-    shop_contents['silver'] = [silver, 40]
-    shop_contents['gold'] = [gold, 30]
-    shop_contents['curse'] = [curse, 30]
-    shop_contents['estate'] = [estate, shop_vp_amount]
-    shop_contents['duchy'] = [duchy, shop_vp_amount]
-    shop_contents['province'] = [province, shop_vp_amount]
-    shop_contents['cellar'] = [cellar, shop_action_amount]
-    shop_contents['market'] = [market, shop_action_amount]
-    shop_contents['merchant'] = [merchant, shop_action_amount]
-    shop_contents['militia'] = [militia, shop_action_amount]
-    shop_contents['mine'] = [mine, shop_action_amount]
-    shop_contents['moat'] = [moat, shop_action_amount]
-    shop_contents['remodel'] = [remodel, shop_action_amount]
-    shop_contents['smithy'] = [smithy, shop_action_amount]
-    shop_contents['village'] = [village, shop_action_amount]
-    shop_contents['workshop'] = [workshop, shop_action_amount]
-
-#####################################################
-
-
-def start_game(num_players):
-    reset_deck()
-    shop_reset()
-    game_players = []
-    for x in range(num_players):
-        game_players += [Player(GENERIC_STARTING_DECKS[x], 'player' + str(x), randomania)]
-    game_shop = Shop(shop_contents)
-    my_game = Game(game_players, game_shop)
-    return my_game
-
-
-
-##########
-scores_decks = []
-for i in range(100000):
-    
-    game = start_game(4)
-
-
-    for x in game.players:
-        
-        x.join_game(game)
-        random.shuffle(x.my_deck.draw_pile)
-        x.my_deck.draw(5)
-    while not game.game_over:
-        game.active_player.play_actions(game.active_player.my_deck.get_actions_in_hand())
-        game.active_player.buy_cards()
-        game.next_turn()
-    for x in game.players:
-        print(x.count_points())
-        scores_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
-    
-    print(i)
-
-scores_decks = sorted(scores_decks)
-for x in range(1, 11):
-    print(str(scores_decks[-x]))
-
