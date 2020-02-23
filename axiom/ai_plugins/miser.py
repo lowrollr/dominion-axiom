@@ -2,7 +2,6 @@
 import random as random
 
 from ai_plugins.dominion_ai import AI
-from cards import *
 from game import *
 from ai_plugins.randomania import Randomania
 #note: this ai scheme will stop working as of now if the default 7 supply cards (i.e. copper, silver, gold, province, duchy, estate, curse) are used

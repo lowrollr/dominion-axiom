@@ -2,7 +2,6 @@
 import random as random
 
 from ai_plugins.dominion_ai import AI
-from cards import *
 from game import *
 
 #randomania: always choose a decision randomly given all possible decisions -- this one is very very bad

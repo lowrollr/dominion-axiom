@@ -1,4 +1,4 @@
-from cards import *
+from game import *
 
 def default_shop():
     shop_contents = {}
