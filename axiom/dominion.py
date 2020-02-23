@@ -14,7 +14,7 @@ from deck_presets import *
 def start_game(num_players):
     game_players = []
     for x in range(num_players):
-        game_players += [Player(default_deck(), 'player' + str(x), Randomania)]
+        game_players += [Player(default_deck(), 'player' + str(x), Miser)]
     game_shop = Shop(default_shop)
     my_game = Game(game_players, game_shop)
     return my_game

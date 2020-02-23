@@ -35,6 +35,9 @@ class Game:
             for_sale[card.name][1] -= 1
             if for_sale[card.name][1] == 0:
                 self.shop.empty_piles += 1
+        if card.name == 'province':
+            if for_sale['province'][1] == 0:
+                self.game_over = True
     
     def trash_card(self, card):
         self.active_player.my_deck.hand.remove(card)
@@ -79,6 +82,7 @@ class Game:
         self.active_player.cleanup()
         if(self.empty_piles_needed <= self.shop.empty_piles):
             self.game_over = True
+        if self.game_over == True:
             return True
         else:
             self.active_player_number = (self.active_player_number + 1) % self.num_players
@@ -302,7 +306,7 @@ class Militia(Card):
         super().__init__(['+2 Coins'], 4, 0, 0, militia_action, True, False, None, 'militia')
 
 def mine_action(my_game):
-    card_to_trash = my_game.active_player.decisions['trash-treasure'](my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
+    card_to_trash = my_game.active_player.ai.trash_for_treasure_fn(my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
     
     if card_to_trash.name != 'error':
         my_game.trash_card(card_to_trash)
