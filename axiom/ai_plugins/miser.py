@@ -36,4 +36,4 @@ def miser_buy(_shop, _deck, _coins):
 
 #other types of decisions aren't really import for this scheme at this time
 Miser = AI(Randomania.action_fn, miser_discard, Randomania.discard_option_fn, miser_buy, \
-    Randomania.trash_fn, Randomania.trash_for_treasure_fn, Randomania.gain_fn)
+    Randomania.trash_fn, Randomania.trash_for_treasure_fn, Randomania.gain_fn, Randomania.put_on_top_fn, Randomania.trash_option_fn, Randomania.draw_or_discard_fn)

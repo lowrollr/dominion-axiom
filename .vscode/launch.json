@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["1000"]
+            "args": ["4", "Common_Sense", "Miser", "Common_Sense", "Miser"]
         }
     ]
 }

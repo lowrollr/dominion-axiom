@@ -18,8 +18,11 @@ def randomania_buy(_shop, _deck, _coins):
     cards_available = _shop.get_cards_under_amount(_coins)
     return random.choice(cards_available + [ImaginaryCard()])
 
-def randomania_trash(_self, _deck, _coins):
+def randomania_trash(_shop, _deck, _coins):
     return random.choice(_deck.hand)
+
+def randomania_trash_option(_shop, _deck):
+    return random.choice(_deck.hand + [ImaginaryCard()])
 
 def randomania_trash_for_treasure(_shop, _deck, _coins):
     treasures = []
@@ -34,5 +37,11 @@ def randomania_gain(_shop, _deck, _limit):
     cards_available = _shop.get_cards_under_amount(_limit)
     return random.choice(cards_available)
 
+def randomania_put_on_top(_deck):
+    return random.choice(_deck.hand)
+
+def randomania_draw_or_discard(_card, _player):
+    return random.random() > 0.5
+    
 Randomania = AI(randomania_action, randomania_discard, randomania_discard_option, randomania_buy, \
-    randomania_trash, randomania_trash_for_treasure, randomania_gain)
+    randomania_trash, randomania_trash_for_treasure, randomania_gain, randomania_put_on_top, randomania_discard_option, randomania_draw_or_discard)

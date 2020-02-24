@@ -11,7 +11,7 @@ def default_shop():
     shop_contents['estate'] = [Estate(), shop_vp_amount]
     shop_contents['duchy'] = [Duchy(), shop_vp_amount]
     shop_contents['province'] = [Province(), shop_vp_amount]
-    shop_contents['cellar'] = [Cellar(), shop_action_amount]
+    shop_contents['library'] = [Library(), shop_action_amount]
     shop_contents['market'] = [Market(), shop_action_amount]
     shop_contents['merchant'] = [Merchant(), shop_action_amount]
     shop_contents['militia'] = [Militia(), shop_action_amount]
