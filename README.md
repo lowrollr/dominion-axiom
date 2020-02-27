@@ -6,3 +6,7 @@ dominion-axiom is a platform for users to implement and test their own AI to pla
   * baseline AI schemes to compare your algorithms to
   * a complete game-engine with numerous cards implemented to test with
   * customizable game presets
+  
+  
+## User Guide
+ coming soon :)
