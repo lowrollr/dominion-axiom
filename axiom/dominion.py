@@ -4,7 +4,7 @@ import copy
 import sys
 
 from game import Card, Deck, Player, Shop, Game
-from ai_plugins.randomania import Randomania
+from ai_plugins.dominion_ai import AI
 from ai_plugins.miser import Miser
 from ai_plugins.common_sense import Common_Sense
 from shop_presets import *
@@ -17,11 +17,11 @@ def start_game(num_players):
     game_players = []
     for x in range(num_players):
         if sys.argv[x+2] == 'Miser': 
-            game_players += [Player(default_deck(), 'player' + str(x), Miser)]
+            game_players += [Player(default_deck(), 'player' + str(x), Miser('miser'))]
         elif sys.argv[x+2] == 'Common_Sense':
-            game_players += [Player(default_deck(), 'player' + str(x), Common_Sense)]
+            game_players += [Player(default_deck(), 'player' + str(x), Common_Sense('common-sense'))]
         else:
-            game_players += [Player(default_deck(), 'player' + str(x), Randomania)]
+            game_players += [Player(default_deck(), 'player' + str(x), AI('random'))]
     game_shop = Shop(default_shop)
     my_game = Game(game_players, game_shop)
     return my_game
@@ -31,6 +31,7 @@ randomania_decks = []
 miser_decks = []
 common_sense_decks = []
 for i in range(1000):
+    print(i)
     game = start_game(int(sys.argv[1]))
     for x in game.players:
         
@@ -42,11 +43,11 @@ for i in range(1000):
         game.active_player.buy_cards()
         game.next_turn()
     for x in game.players:
-        if x.ai == Miser:
+        if x.ai.name == 'miser':
             miser_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
-        elif x.ai == Common_Sense:
+        elif x.ai.name == 'common-sense':
             common_sense_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
-        elif x.ai == Randomania:
+        elif x.ai.name == 'random':
             randomania_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
     
 

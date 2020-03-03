@@ -14,7 +14,14 @@ def card_action_regex(action):
         amount = int(actual_action.group(1))
         act_type = actual_action.group(2)
         return (act_type, amount)
+
+def card_in_list(card, list_of_cards):
+    for x in list_of_cards:
+        if type(x) is type(card):
+            return True
+    return False
 ##############################
+
 
 
 ################### CLASSES #########################
@@ -165,7 +172,7 @@ class Player:
 
     def play_actions(self, action_cards):
         if self.actions > 0 and action_cards != None:
-            action_to_play = self.ai.action_fn(self.my_deck, action_cards)
+            action_to_play = self.ai.action_fn(self.game, self, None, True)
             if action_to_play.name != 'error': 
                 self.game.play_card(action_to_play)
                 self.actions -= 1
@@ -174,7 +181,7 @@ class Player:
     def buy_cards(self):
         self.coins += self.my_deck.calc_hand_value()
         if self.buys > 0:
-            card_to_buy = self.ai.buy_fn(self.game.shop, self.my_deck, self.coins)
+            card_to_buy = self.ai.buy_fn(self.game, self, None, True)
             if card_to_buy.name != 'error':
                 self.game.buy_card(card_to_buy)
                 self.coins -= card_to_buy.cost
@@ -183,7 +190,7 @@ class Player:
                 self.buy_cards()
 
     def choose_card_to_discard(self):
-        self.my_deck.discard(self.ai.discard_fn(self.my_deck))
+        self.my_deck.discard(self.ai.discard_fn(self.game, self, None, False))
         
     def cleanup(self):
         self.my_deck.cleanup_deck_actions()
@@ -298,11 +305,11 @@ class Province(Card):
 def cellar_action(my_game):
     cur_player = my_game.active_player
     cards_to_discard = []
-    targ_card = my_game.active_player.ai.discard_option_fn(cur_player.my_deck)
+    targ_card = my_game.active_player.ai.discard_fn(my_game, my_game.active_player, None, True)
     while targ_card.name != 'error':
         cards_to_discard += [targ_card]
         cur_player.my_deck.discard(targ_card)
-        targ_card = my_game.active_player.ai.discard_option_fn(cur_player.my_deck)
+        targ_card = my_game.active_player.ai.discard_fn(my_game, my_game.active_player, None, True)
     cur_player.my_deck.draw(len(cards_to_discard))
 
 class Cellar(Card):
@@ -330,12 +337,19 @@ class Militia(Card):
     def __init__(self):
         super().__init__(['+2 Coins'], 4, 0, 0, None, True, militia_attack, False, None, 'militia')
 
+def mine_stip(cards):
+    filtered = []
+    for x in cards:
+        if x.worth:
+            filtered += [x]
+    return filtered
+
 def mine_action(my_game):
-    card_to_trash = my_game.active_player.ai.trash_for_treasure_fn(my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
+    card_to_trash = my_game.active_player.ai.trash_fn(my_game, my_game.active_player, mine_stip, False)
     
     if card_to_trash.name != 'error':
         my_game.trash_card(card_to_trash)
-        card_to_gain = my_game.active_player.ai.gain_fn(my_game.shop, my_game.active_player.my_deck, card_to_trash.cost + 3)
+        card_to_gain = my_game.active_player.ai.gain_fn(my_game, my_game.active_player, mine_stip, False)
         my_game.gain_to_hand(card_to_gain)
 
 class Mine(Card):
@@ -348,11 +362,19 @@ def moat_reaction(my_game):
 class Moat(Card):
     def __init__(self):
         super().__init__(['+2 Cards'], 2, 0, 0, None, False, None, True, moat_reaction, 'moat')
-        
+
+
+
 def remodel_action(my_game):
-    card_to_trash = my_game.active_player.ai.trash_fn(my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
+    card_to_trash = my_game.active_player.ai.trash_fn(my_game, my_game.active_player, None, False)
     my_game.trash_card(card_to_trash)
-    card_to_gain =  my_game.active_player.ai.gain_fn(my_game.shop, my_game.active_player.my_deck, card_to_trash.cost + 2)
+    def remodel_stip(cards):
+        filtered = []
+        for x in cards:
+            if x.cost <= card_to_trash.cost + 2:
+                filtered += [x]
+        return filtered
+    card_to_gain =  my_game.active_player.ai.gain_fn(my_game, my_game.active_player, remodel_stip, False)
     my_game.gain(card_to_gain)
 
 class Remodel(Card):
@@ -368,7 +390,13 @@ class Village(Card):
         super().__init__(['+1 Card', '+2 Actions'], 3, 0, 0 , None, False, None, False, None, 'village')
 
 def workshop_action(my_game):
-    card_to_gain =  my_game.active_player.ai.gain_fn(my_game.shop, my_game.active_player.my_deck, 4)
+    def workshop_stip(cards):
+        filtered = []
+        for x in cards:
+            if x.cost <= 4:
+                filtered += [x]
+        return filtered
+    card_to_gain =  my_game.active_player.ai.gain_fn(my_game, my_game.active_player, workshop_stip, False)
     my_game.gain(card_to_gain)
 
 class Workshop(Card):
@@ -376,9 +404,15 @@ class Workshop(Card):
         super().__init__([], 3, 0, 0, workshop_action, False, None, False, None, 'workshop')
 
 def artisan_action(my_game):
-    card_to_gain =  my_game.active_player.ai.gain_fn(my_game.shop, my_game.active_player.my_deck, 4)
+    def artisan_stip(cards):
+        filtered = []
+        for x in cards:
+            if x.cost <= 5:
+                filtered += [x]
+        return filtered
+    card_to_gain =  my_game.active_player.ai.gain_fn(my_game, my_game.active_player, artisan_stip, False)
     my_game.gain_to_hand(card_to_gain)
-    my_game.active_player.my_deck.place(my_game.active_player.ai.put_on_top_fn(my_game.active_player.my_deck, my_game.active_player), 0)
+    my_game.active_player.my_deck.place(my_game.active_player.ai.put_on_top_fn(my_game, my_game.active_player, None, False))
 
 class Artisan(Card):
     def __init__(self):
@@ -417,7 +451,7 @@ class Bureaucrat(Card):
 
 def chapel_action(my_game):
     for x in len(4):
-        card_to_trash = my_game.active_player.ai.trash_option_fn(my_game.shop, my_game.active_player.my_deck, my_game.active_player.coins)
+        card_to_trash = my_game.active_player.ai.trash_fn(my_game, my_game.active_player, None, True)
         my_game.trash_card(card_to_trash)
 
 class Chapel(Card):
@@ -453,11 +487,9 @@ def library_action(my_game):
     while(len(my_game.active_player.my_deck.hand) < 7):
         if my_game.active_player.my_deck.draw_pile == []:
             my_game.active_player.my_deck.shuffle()
-        targ_card = my_game.active_player.my_deck.draw_pile.pop()
-        if my_game.active_player.ai.draw_or_discard_fn(targ_card, my_game.active_player):
+        targ_card = my_game.active_player.ai.draw_or_discard_from_deck_fn(my_game, my_game.active_player, None, False)
+        if targ_card.name != 'error':
             my_game.active_player.my_deck.hand += [targ_card]
-        else:
-            my_game.active_player.my_deck.discard_pile += [targ_card]
 
 class Library(Card):
     def __init__(self):
