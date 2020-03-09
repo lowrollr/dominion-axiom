@@ -1,25 +1,37 @@
 import random
 import re
 import copy
-import sys
+import importlib
+import inspect
 
 from game import Card, Deck, Player, Shop, Game
 from ai_plugins.dominion_ai import AI
-from ai_plugins.miser import Miser
-from ai_plugins.common_sense import Common_Sense
 from shop_presets import *
 from deck_presets import *
 
+def import_AI(ai_name):
+    try:
+        module = importlib.import_module('ai_plugins.{0}'.format(ai_name))
+        for x in dir(module):
+            obj = getattr(module, x)
+            if inspect.isclass(obj) and issubclass(obj, AI) and obj is not AI:
+                return obj
+    except ImportError:
+        print('failed to import AI module "' + ai_name + '". Make sure "'+ ai_name + '.py" is present in the "ai_plugins" directory and has no syntax errors')
+        exit()
 
 def start_game(num_players, player_types):
     game_players = []
     for x in range(num_players):
-        if player_types[x] == 'Miser': 
-            game_players += [Player(default_deck(), 'player' + str(x), Miser('miser'))]
-        elif player_types[x] == 'Common_Sense':
-            game_players += [Player(default_deck(), 'player' + str(x), Common_Sense('common-sense'))]
-        else:
-            game_players += [Player(default_deck(), 'player' + str(x), AI('random'))]
+        ai_type = import_AI(player_types[x])
+        if ai_type:
+            game_players += [Player(default_deck(), 'player' + str(x), ai_type(player_types[x]))]
+        # if player_types[x] == 'Miser': 
+        #     game_players += [Player(default_deck(), 'player' + str(x), Miser('miser'))]
+        # elif player_types[x] == 'Common_Sense':
+        #     game_players += [Player(default_deck(), 'player' + str(x), Common_Sense('common-sense'))]
+        # else:
+        #     game_players += [Player(default_deck(), 'player' + str(x), AI('random'))]
     game_shop = Shop(default_shop)
     my_game = Game(game_players, game_shop)
     return my_game
