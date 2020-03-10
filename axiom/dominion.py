@@ -10,6 +10,9 @@ from shop_presets import *
 from deck_presets import *
 
 def import_AI(ai_name):
+    if ai_name == 'dominion_ai':
+        print('please specify the name of your AI file in the CL args rather than just "dominion_ai"')
+        exit()
     try:
         module = importlib.import_module('ai_plugins.{0}'.format(ai_name))
         for x in dir(module):
