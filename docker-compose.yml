@@ -1,0 +1,22 @@
+version: '3'
+services:
+  web:
+    build: ./webpage
+    container_name: web-server
+    restart: unless-stopped
+    ports:
+      - 80:80
+
+  # api:
+  #   build: ./api
+  #   container_name: rust_api
+  #   restart: unless-stopped
+  #   ports:
+  #     - 3000:3000
+
+  # dominion:
+  #   build: ./dominionWebsite
+  #   container_name: dominion
+  #   restart: unless-stopped
+  #   ports: 
+  #     - 9001:9001
