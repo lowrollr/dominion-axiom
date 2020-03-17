@@ -102,31 +102,31 @@ class Common_Sense(AI):
                     return(random.choice(available_cards))
                 return(random.choice(not_actions))
     
-    #Returns the card if it is drawn, otherwise places it in discard or draw pile accordingly
-    def draw_or_discard_from_deck_fn(self, _game, _player, _stip, _optional):
-        stip, optional_card = super().process_decision_params(_stip, _optional)
-        top_card = _player.my_deck.draw_pile.pop()
-        if stip([top_card]):
-            if top_card.actions or top_card.additional_action or top_card.attack_fn:
-                if _player.actions:
-                    return top_card
-                else:
-                    if _optional:
-                        _player.my_deck.place(top_card, 0)
-                        return ImaginaryCard()
-                    else:
-                        _player.my_deck.discard += [top_card]
-                        return ImaginaryCard()
-            elif top_card.pts:
-                _player.my_deck.discard_pile += [top_card]
-                return ImaginaryCard()
-            elif top_card.worth >= 1:
-                return top_card
-            else:
-                _player.my_deck.discard_pile += [top_card]
-                return ImaginaryCard()
-        else:
-            #keep it on top, doesn't meet the stipulation
-            _player.my_deck.place(top_card, 0)
-            return ImaginaryCard()
+    # #Returns the card if it is drawn, otherwise places it in discard or draw pile accordingly
+    # def draw_or_discard_from_deck_fn(self, _game, _player, _stip, _optional):
+    #     stip, optional_card = super().process_decision_params(_stip, _optional)
+    #     top_card = _player.my_deck.draw_pile.pop()
+    #     if stip([top_card]):
+    #         if top_card.actions or top_card.additional_action or top_card.attack_fn:
+    #             if _player.actions:
+    #                 return top_card
+    #             else:
+    #                 if _optional:
+    #                     _player.my_deck.place(top_card, 0)
+    #                     return ImaginaryCard()
+    #                 else:
+    #                     _player.my_deck.discard += [top_card]
+    #                     return ImaginaryCard()
+    #         elif top_card.pts:
+    #             _player.my_deck.discard_pile += [top_card]
+    #             return ImaginaryCard()
+    #         elif top_card.worth >= 1:
+    #             return top_card
+    #         else:
+    #             _player.my_deck.discard_pile += [top_card]
+    #             return ImaginaryCard()
+    #     else:
+    #         #keep it on top, doesn't meet the stipulation
+    #         _player.my_deck.place(top_card, 0)
+    #         return ImaginaryCard()
 

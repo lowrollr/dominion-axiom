@@ -67,27 +67,32 @@ class AI:
         else:
             return ImaginaryCard()
 
-    def draw_or_discard_from_deck_fn(self, _game, _player, _stip, _optional):
-        stip, optional_card = self.process_decision_params(_stip, _optional)
-        top_card = _player.my_deck.draw_pile.pop()
-        if stip([top_card]):
-            if not _optional:
-                if random.randint(0, 1):
-                    return top_card
-                else:
-                    _player.my_deck.discard_pile += [top_card]
-                    return ImaginaryCard()
-            else:
-                rand_num = random.randint(0, 2)
-                if rand_num == 0:
-                    return top_card
-                elif rand_num == 1:
-                    _player.my_deck.discard_pile += [top_card]
-                    return ImaginaryCard()
-                else:
-                    _player.my_deck.place(top_card, 0) 
-                    return ImaginaryCard()
-        else:
-            #keep it on top, doesn't meet the stipulation
-            _player.my_deck.place(top_card, 0) 
-            return ImaginaryCard()
+
+    # this is a mess and will be re-implemented at a later date
+    # def draw_or_discard_from_deck_fn(self, _game, _player, _stip, _optional):
+    #     stip, optional_card = self.process_decision_params(_stip, _optional)
+    #     try:
+    #         top_card = _player.my_deck.draw_pile.pop()
+    #     except IndexError:
+            
+    #     if stip([top_card]):
+    #         if not _optional:
+    #             if random.randint(0, 1):
+    #                 return top_card
+    #             else:
+    #                 _player.my_deck.discard_pile += [top_card]
+    #                 return ImaginaryCard()
+    #         else:
+    #             rand_num = random.randint(0, 2)
+    #             if rand_num == 0:
+    #                 return top_card
+    #             elif rand_num == 1:
+    #                 _player.my_deck.discard_pile += [top_card]
+    #                 return ImaginaryCard()
+    #             else:
+    #                 _player.my_deck.place(top_card, 0) 
+    #                 return ImaginaryCard()
+    #     else:
+    #         #keep it on top, doesn't meet the stipulation
+    #         _player.my_deck.place(top_card, 0) 
+    #         return ImaginaryCard()

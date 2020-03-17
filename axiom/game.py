@@ -487,16 +487,16 @@ class Laboratory(Card):
     def __init__(self):
         super().__init__(['+2 Cards', '+1 Action'], 5, 0, 0, None, False, None, False, None, 'laboratory')
 
-def library_action(my_game):
-    while(len(my_game.active_player.my_deck.hand) < 7):
-        if my_game.active_player.my_deck.draw_pile == []:
-            my_game.active_player.my_deck.shuffle()
-        targ_card = my_game.active_player.ai.draw_or_discard_from_deck_fn(my_game, my_game.active_player, None, False)
-        if targ_card.name != 'error':
-            my_game.active_player.my_deck.hand += [targ_card]
+# def library_action(my_game):
+#     while(len(my_game.active_player.my_deck.hand) < 7):
+#         if my_game.active_player.my_deck.draw_pile == []:
+#             my_game.active_player.my_deck.shuffle()
+#         targ_card = my_game.active_player.ai.draw_or_discard_from_deck_fn(my_game, my_game.active_player, None, False)
+#         if targ_card.name != 'error':
+#             my_game.active_player.my_deck.hand += [targ_card]
 
-class Library(Card):
-    def __init__(self):
-        super().__init__([], 5, 0, 0, library_action, False, None, False, None, 'library')
+# class Library(Card):
+#     def __init__(self):
+#         super().__init__([], 5, 0, 0, library_action, False, None, False, None, 'library')
 
 # -/
