@@ -3,51 +3,77 @@ import re
 import copy
 import importlib
 import inspect
+import csv
 
-from game import Card, Deck, Player, Shop, Game
+from game import *
 from ai_plugins.dominion_ai import AI
-from shop_presets import *
-from deck_presets import *
 
 def import_AI(ai_name):
-    if ai_name == 'dominion_ai':
-        print('please specify the name of your AI file in the CL args rather than just "dominion_ai"')
-        exit()
     try:
         module = importlib.import_module('ai_plugins.{0}'.format(ai_name))
         for x in dir(module):
             obj = getattr(module, x)
             if inspect.isclass(obj) and issubclass(obj, AI) and obj is not AI:
                 return obj
+            elif ai_name == 'dominion_ai' and inspect.isclass(obj):
+                return obj
+                
     except ImportError:
-        print('failed to import AI module "' + ai_name + '". Make sure "'+ ai_name + '.py" is present in the "ai_plugins" directory and has no syntax errors')
+        print('ERROR: failed to import AI module "' + ai_name + '". Make sure "'+ ai_name + '.py" is present in the "ai_plugins" directory and has no syntax errors')
         exit()
 
-def start_game(num_players, player_types):
+def import_deck(deck_name):
+    try:
+        deck_file = open('./axiom/deck_presets/' + deck_name + '.deck', 'r')
+    except FileNotFoundError:
+        print('ERROR: failed to find deck file: ' + deck_name + '.deck')
+        exit()
+    starting_cards = []
+    for elem in deck_file:
+        elem_split = elem.split(' ')
+        card_amnt = elem_split[0]
+        card_name = elem_split[1].rstrip()
+        card = eval(card_name.title() + '()')
+        for x in range(0, int(card_amnt)):
+            starting_cards += [card]
+    deck_file.close()
+    return Deck(starting_cards)
+    
+
+def import_shop(shop_name):
+    try:
+        shop_file = open('./axiom/shop_presets/' + shop_name + '.shop', 'r')
+    except:
+        print('ERROR: failed to find shop file: ' + shop_name + '.shop')
+        exit()
+    shop_contents = {}
+    for elem in shop_file:
+        elem_split = elem.split(' ')
+        card_amnt = elem_split[0]
+        card_name = elem_split[1].rstrip()
+        shop_contents[card_name] = [eval(card_name.title() + '()'), int(card_amnt)]
+    shop_file.close()
+    return shop_contents
+
+def start_game(num_players, player_types, deck_preset, shop_preset):
     game_players = []
     for x in range(num_players):
         ai_type = import_AI(player_types[x])
         if ai_type:
-            game_players += [Player(default_deck(), 'player' + str(x), ai_type(player_types[x]))]
-        # if player_types[x] == 'Miser': 
-        #     game_players += [Player(default_deck(), 'player' + str(x), Miser('miser'))]
-        # elif player_types[x] == 'Common_Sense':
-        #     game_players += [Player(default_deck(), 'player' + str(x), Common_Sense('common-sense'))]
-        # else:
-        #     game_players += [Player(default_deck(), 'player' + str(x), AI('random'))]
-    game_shop = Shop(default_shop)
+            game_players += [Player(copy.deepcopy(import_deck(deck_preset)), 'player' + str(x), ai_type(player_types[x]))]
+    game_shop = Shop(import_shop(shop_preset))
     my_game = Game(game_players, game_shop)
     return my_game
 
-def simulate_games(num_players, player_types, num_games):
+def simulate_games(num_players, player_types, num_games, deck_preset, shop_preset):
     randomania_decks = []
     miser_decks = []
     common_sense_decks = []
     for i in range(num_games):
         if i%50 == 0 and i != 0:
-            print('simulated ' + str(num_games) + ' games so far')
+            print('simulated ' + str(i) + ' games so far...')
 
-        game = start_game(num_players, player_types)
+        game = start_game(num_players, player_types, deck_preset, shop_preset)
         for x in game.players:
             x.join_game(game)
             random.shuffle(x.my_deck.draw_pile)
@@ -61,7 +87,7 @@ def simulate_games(num_players, player_types, num_games):
                 miser_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
             elif x.ai.name == 'common-sense':
                 common_sense_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
-            elif x.ai.name == 'random':
+            elif x.ai.name == 'dominion_ai':
                 randomania_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
         
 

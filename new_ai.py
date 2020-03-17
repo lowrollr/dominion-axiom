@@ -1,4 +1,5 @@
 import sys
+
 ai_name = sys.argv[1]
 
 f=open("./axiom/ai_plugins/" + ai_name + ".py", "w")

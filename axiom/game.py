@@ -3,12 +3,18 @@ import random
 import re
 import copy
 import math
-##### REGEX DEFS ######
+
+
+
+# Regex Definitions:
+
 basic_action_regex = re.compile("^\+(.) (.*)$")
 
-#######################
+# -/
 
-##### HELPER FUNCTIONS #######
+
+# Helper Functions:
+
 def card_action_regex(action):
         actual_action = basic_action_regex.match(action)
         amount = int(actual_action.group(1))
@@ -20,11 +26,11 @@ def card_in_list(card, list_of_cards):
         if type(x) is type(card):
             return True
     return False
-##############################
 
+# -/
 
+# Game Classes:
 
-################### CLASSES #########################
 class Game:
     def __init__(self, my_players, my_shop):
         self.players = my_players
@@ -117,9 +123,9 @@ class Game:
 
 
 class Shop:
-    def __init__(self, my_reset_fn):
-        self.reset_fn = my_reset_fn
-        self.supply = self.reset_fn()
+    def __init__(self, supply_dict):
+        self.def_supply = supply_dict
+        self.supply = copy.deepcopy(self.def_supply)
         self.empty_piles = 0
 
     def get_cards_under_amount(self, amount):
@@ -131,7 +137,7 @@ class Shop:
         return cards_under_amount
     
     def reset_shop(self):
-        self.reset_fn()
+        self.supply = copy.deepcopy(self.def_supply)
 
 
 class Card:
@@ -221,12 +227,9 @@ class Deck:
         self.draw(5)
 
     def draw(self, amnt):
-        if len(self.draw_pile) < 5:
-            self.shuffle()
         for i in range(amnt):
             if self.draw_pile == []:
-                print('tried to draw from empty deck')
-                
+                self.shuffle()
             else:
                 self.hand += [self.draw_pile.pop()]
             
@@ -264,12 +267,13 @@ class Deck:
         return card_names
 
 
+# -/
 
 
 
 
+# Game Cards & their corresponding actions
 
-####### GAME CARDS (& thier additonal actions) ###########
 class ImaginaryCard(Card):
     def __init__(self):
         super().__init__(None, 0, 0, 0, None, False, None, False, None, 'error')
@@ -494,4 +498,5 @@ def library_action(my_game):
 class Library(Card):
     def __init__(self):
         super().__init__([], 5, 0, 0, library_action, False, None, False, None, 'library')
-#####################################################
+
+# -/
