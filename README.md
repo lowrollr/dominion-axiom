@@ -18,7 +18,7 @@ In order to run your first analysis of Dominion games, clone this repo, then inp
 ```
 python3 axiom <# of players> <player1 AI type> <player2 AI type> ... <playerN AI type> <# of games to play> <starting deck preset> <shop preset> 
 ```
-For example, using the default deck and shop presets, simulating 10000 games with 4 players using the miser, common_sense, miser, and common_sense ai schemes, would look like this:
+For example, using the default deck and shop presets, simulating 1000 games with 4 players using the miser, common_sense, miser, and common_sense ai schemes, would look like this:
 ```
 python3 axiom 4 miser common_sense miser common_sense 1000 default default
 ```
