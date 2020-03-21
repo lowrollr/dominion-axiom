@@ -8,6 +8,8 @@ import csv
 from game import *
 from ai_plugins.dominion_ai import AI
 
+ai_types = set()
+
 def import_AI(ai_name):
     try:
         module = importlib.import_module('ai_plugins.{0}'.format(ai_name))
@@ -56,24 +58,28 @@ def import_shop(shop_name):
     return shop_contents
 
 def start_game(num_players, player_types, deck_preset, shop_preset):
+    global ai_types
     game_players = []
     for x in range(num_players):
         ai_type = import_AI(player_types[x])
         if ai_type:
-            game_players += [Player(copy.deepcopy(import_deck(deck_preset)), 'player' + str(x), ai_type(player_types[x]))]
+            game_players += [Player(copy.deepcopy(import_deck(deck_preset)), 'player' + str(x), ai_type(str(ai_type).split('.')[1]))]          
+            ai_types.add(str(ai_type).split('.')[1])
     game_shop = Shop(import_shop(shop_preset))
     my_game = Game(game_players, game_shop)
     return my_game
 
 def simulate_games(num_players, player_types, num_games, deck_preset, shop_preset):
-    randomania_decks = []
-    miser_decks = []
-    common_sense_decks = []
+    ai_scores = []
     for i in range(num_games):
         if i%50 == 0 and i != 0:
             print('simulated ' + str(i) + ' games so far...')
 
         game = start_game(num_players, player_types, deck_preset, shop_preset)
+        if not i:
+            global ai_types
+            for x in ai_types:
+                ai_scores += [[x, []]]
         for x in game.players:
             x.join_game(game)
             random.shuffle(x.my_deck.draw_pile)
@@ -82,34 +88,46 @@ def simulate_games(num_players, player_types, num_games, deck_preset, shop_prese
             game.active_player.play_actions(game.active_player.my_deck.get_actions_in_hand())
             game.active_player.buy_cards()
             game.next_turn()
-        for x in game.players:
-            if x.ai.name == 'miser':
-                miser_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
-            elif x.ai.name == 'common-sense':
-                common_sense_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
-            elif x.ai.name == 'dominion_ai':
-                randomania_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
+
+        for x in ai_scores:
+            for y in game.players:
+                if y.ai.name == x[0]:
+                    x[1] += [[y.count_points(), y.my_deck.get_all_card_names()]]
+        # for x in game.players:
+        #     if x.ai.name == 'miser':
+        #         miser_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
+        #     elif x.ai.name == 'common-sense':
+        #         common_sense_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
+        #     elif x.ai.name == 'dominion_ai':
+        #         randomania_decks += [[x.count_points(), x.my_deck.get_all_card_names()]]
         
+    for x in ai_scores:
+        x = [x[0], x[1].sort()]
 
-    randomania_decks = sorted(randomania_decks)
-    miser_decks = sorted(miser_decks)
-    common_sense_decks = sorted(common_sense_decks)
+    ai_sums = []
+    for x in ai_scores:
+        ai_sums += [0]
+        for y in range(len(x[1])):
+            ai_sums[-1] += x[1][y][0]
+        print(str(x[0] + " average score = " + str(ai_sums[-1]/len(x[1]))))
 
-    miser_sum = 0
-    common_sense_sum = 0
-    randomania_sum = 0
-    for x in range(len(randomania_decks)):
-        randomania_sum += randomania_decks[x][0]
+    
+            
+    # miser_sum = 0
+    # common_sense_sum = 0
+    # randomania_sum = 0
+    # for x in range(len(randomania_decks)):
+    #     randomania_sum += randomania_decks[x][0]
 
-    for x in range(len(common_sense_decks)):
-        common_sense_sum += common_sense_decks[x][0]
+    # for x in range(len(common_sense_decks)):
+    #     common_sense_sum += common_sense_decks[x][0]
 
-    for x in range(len(miser_decks)):
-        miser_sum += miser_decks[x][0]
+    # for x in range(len(miser_decks)):
+    #     miser_sum += miser_decks[x][0]
 
-    if len(miser_decks) != 0:
-        print('Miser Avg. Score = ' + str(miser_sum/len(miser_decks)))
-    if len(common_sense_decks) != 0:
-        print('Common_Sense Avg. Score = ' + str(common_sense_sum/len(common_sense_decks)))
-    if len(randomania_decks) != 0:
-        print('Randomania Avg. Score = ' + str(randomania_sum/len(randomania_decks)))
+    # if len(miser_decks) != 0:
+    #     print('Miser Avg. Score = ' + str(miser_sum/len(miser_decks)))
+    # if len(common_sense_decks) != 0:
+    #     print('Common_Sense Avg. Score = ' + str(common_sense_sum/len(common_sense_decks)))
+    # if len(randomania_decks) != 0:
+    #     print('Randomania Avg. Score = ' + str(randomania_sum/len(randomania_decks)))
