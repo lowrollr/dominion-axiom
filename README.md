@@ -92,4 +92,9 @@ The default file included, `default.shop`, looks like this:
 ```
 This file stipulates that the shop will have 60 'copper' cards available for sale, 40 'silver' cards, 30 'gold' cards, etc. The general format for each line must be `<card amount> <card name>`.
 
-
+#### Using your custom preset file
+Use command line arguments to utilize your custom preset file in simulation. For example, if you created `top_secret.deck` and `extra_fun.shop`, running the simulation with the following command would utilize those files:
+```
+python3 axiom 4 miser common_sense miser common_sense 1000 top_secret extra_fun
+```
+(also see the command line examples in the 'Getting Started' section)
