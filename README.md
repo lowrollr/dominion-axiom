@@ -1,6 +1,7 @@
 # dominion-axiom
 ### What the heck is this?
-dominion-axiom is a platform for users to implement and test their own AI to play the popular tabletop deck-building game Dominion.
+dominion-axiom is a platform for users to implement and test their own AI to play the popular tabletop deck-building game Dominion. If you are unfamiliar with Dominion, a brief discussion of the game and its rules is on Wikipedia: https://en.wikipedia.org/wiki/Dominion_(card_game)
+
 ### core-features of dominion-axiom include 
   * the ability to simulate a limitless amount of games and gain access to meaninful statistics
   * baseline AI schemes to compare your algorithms to
@@ -51,3 +52,44 @@ common_sense average score = 30.6695
 miser average score = 29.073
 ```
 Your exact average scores should of course be slightly different.
+
+### Using Custom Deck/Shop Presets
+Within the axiom directory, there exist directories named `deck_presets` and `shop_presets`. Within these directories are `.deck` and `.shop` files respectively. Axiom supports the ability for users to use their own preset files during simulation. 
+
+#### Creating a .deck File
+A deck preset defines which cards exist in each player's deck when the game begins. In order to create a custom deck preset, create a file named `<whatever you want to name it>.deck` within the `axiom/deck_presets` directory and open it with your text-editor of choice.
+
+The contents of these files are extremely straightforward. For example, the default file included, `default.deck` is simply written as:
+```
+7 copper
+3 estate
+```
+This .deck file represents a starting deck with 7 'copper' cards and 3 'estate' cards. The general format for each line in a .deck file must be `<card amount> <card name>`. It's that easy!
+
+#### Creating a .shop File
+Similarly, creating a shop preset file is also pretty straightforward. A shop preset defines which cards are available in the game's shop (some call this the supply), as well as the amount of each cards available.
+
+The default file included, `default.shop`, looks like this:
+
+```
+60 copper
+40 silver
+30 gold
+30 curse
+12 estate
+12 duchy
+12 province
+10 cellar
+10 market
+10 merchant
+10 militia
+10 mine
+10 moat
+10 remodel
+10 smithy
+10 village
+10 workshop
+```
+This file stipulates that the shop will have 60 'copper' cards available for sale, 40 'silver' cards, 30 'gold' cards, etc. The general format for each line must be `<card amount> <card name>`.
+
+
