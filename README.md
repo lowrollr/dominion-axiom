@@ -1,4 +1,4 @@
-# dominion-axiom
+![Axiom Logo](https://github.com/marshingjay/dominion-axiom/blob/master/axiom_logo.PNG)
 ### What the heck is this?
 dominion-axiom is a platform for users to implement and test their own AI to play the popular tabletop deck-building game Dominion. If you are unfamiliar with Dominion, a brief discussion of the game and its rules is on Wikipedia: https://en.wikipedia.org/wiki/Dominion_(card_game).
 
