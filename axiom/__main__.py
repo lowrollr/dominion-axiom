@@ -22,5 +22,4 @@ if __name__ == '__main__':
             shop_preset = sys.argv[4 + num_players]
             print("using shop preset: " + shop_preset)
             #start the simulation
-            
             simulate_games(num_players, player_types, num_games, deck_preset, shop_preset)

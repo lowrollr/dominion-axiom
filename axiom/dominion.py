@@ -24,9 +24,6 @@ def import_AI(ai_name): #import an AI scheme defined by the user at runtime
             #or if it's the AI class itself
             elif ai_name == 'dominion_ai' and inspect.isclass(obj):
                 return obj
-            else:
-                print('error importing AI scheme! make sure your file follows the design guidelines.')
-                exit()
 
     except ImportError: #this will be thrown if the name the user specifies does not correspond to an ai_plugin
         print('ERROR: failed to import AI module "' + ai_name + '". Make sure "'+ ai_name + '.py" is present in the "ai_plugins" directory and has no syntax errors')
