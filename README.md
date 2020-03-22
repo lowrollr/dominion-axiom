@@ -99,8 +99,6 @@ python3 axiom 4 miser common_sense miser common_sense 1000 top_secret extra_fun
 ```
 (also see the command line examples in the 'Getting Started' section)
 
-### Class Structure
-
 
 ### AI Schemes
 The 'meat' of this platform is of course the ability to develop AI to play Dominion. In the context of this simulator, 'AI' is a collection of functions that broadly define all the decisions a player could make during the course of the game. I oftentimes refer to the collection of these functions as 'AI schemes'. Each AI scheme is defined within its own python file within the `axiom/ai_plugins` directory, and is a subclass of the superclass `AI` defined in `dominion_ai.py`. The `AI` superclass defines every decision point function (and works as an AI scheme on its own), so deprecated AI schemes will still work even if a new decision function is added later on. However, the functions defined in the `AI` superclass simply make all decisions randomly, so the resulting scores when using this scheme are very, very, very bad.
@@ -165,15 +163,81 @@ This function will return a Card object corresponding to the card that the playe
 
 It is important to note that these functions don't actually perform any of the game mechanics that might be made after making one of these decisions, that is handled by the game engine!
 
+##### Preprocessing
+It is likely that you'll want to do some sort of preprocessing on the `_stip` and `_optional` arguments. For example, when the game engine passes control to a decision function and doesn't have any further stipulations, the agrument passed will be 'None'. You could of  course handle this case in each function, but it is oftentimes more efficient to abstract this handling to a different function. In the `AI` superclass, stipulations passed in as None are converted to functions that simply return the passed in argument during preprocessing. This superclass function is available for your use, or you can define your own!
 
+The preprocessing function format:
+```python
+def process_decision_params(self, _stip, _optional):
+   return new_stip, new_optional
+```
+
+##### Examples
 This all might sound a little confusing, but maybe if I give an example it will be clearer!
 
 The following is a function within the `miser` AI scheme, which is included as part of this platform:
+``` python
+def buy_fn(self, _game, _player, _stip, _optional):
+        stip, optional_card = super().process_decision_params(_stip, _optional)
+        cards_available = _game.shop.get_cards_under_amount(_player.coins)
+        stip_cards = stip([Province(), Gold(), Silver()])
+        list_of_cards = []
+        for x in stip_cards:
+            for y in cards_available:
+                if type(x) is type(y):
+                    list_of_cards += [x]
 
-TODO TODO TODO
+        if card_in_list(Province(), list_of_cards):
+            return Province()
+        elif card_in_list(Gold(), list_of_cards):
+            return Gold()
+        elif card_in_list(Silver(), list_of_cards):
+            return Silver()
+        else:
+            if _optional:
+                return ImaginaryCard()
+            else:
+                return random.choice(cards_available)
+ ```
+Let's walk through this line-by-line:
+```python
+stip, optional_card = super().process_decision_params(_stip, _optional)
+```
+First, we use the superclass preprocessing function to do necessary preprocessing on the stipulation and optional card arguments.
+```python
+cards_available = _game.shop.get_cards_under_amount(_player.coins)
+```
+Then, we define `cards_available` as a list of all the cards available in the shop that the player can afford with the coins they currently have (This is something you should always do in buy_fn).
+```python
+stip_cards = stip([Province(), Gold(), Silver()])
+```
+This particular AI scheme by definition is only interested in having a deck full of Silver, Gold, and Province cards, so those are the only cards we are interested in buying. This means that we want to apply our stipulation function to only these cards, since we aren't buying any others (If your algorithm considers all cards available in the shop, just apply the stipulation function to the list of cards available)
+```python
+list_of_cards = []
+for x in stip_cards:
+    for y in cards_available:
+        if type(x) is type(y):
+            list_of_cards += [x]
+```
+This simply defines list_of_cards as the list of cards that we are interested in buying, essentially the intersection of stip_cards and cards_available.
+```python
+if card_in_list(Province(), list_of_cards):
+    return Province()
+elif card_in_list(Gold(), list_of_cards):
+    return Gold()
+elif card_in_list(Silver(), list_of_cards):
+    return Silver()
+```
+This algorithm prioritizes buying Provnices, then Gold, and finally Silver. The card_in_list is a helper function we obtain from `game.py` that returns whether or not a card is included in a list of cards (this is not as simple as `<card> in list` because we are comparing class instances, similarly to the for loop above). If the card we desire is available, we return an instance of it.
+```python
+else:
+    if _optional:
+        return ImaginaryCard()
+    else:
+        return random.choice(cards_available)
+```
+Finally, we handle the case where we can't buy any of the cards we desire. If buying a card is optional, we return an instance of an ImaginaryCard, which signals to the game engine that we are choosing to do nothing. However, if the game stipulates that we must purchase a card, we return a random choice out of the cards available.
 
-
-
-
+For many, many more examples of how to write decision functions for this platform, please consult the 3 AI schemes currently included (dominion_ai (superclass), common_sense, and miser). 
 
 
