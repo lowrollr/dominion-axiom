@@ -15,14 +15,16 @@ basic_action_regex = re.compile("^\+(.) (.*)$")
 
 # Helper Functions:
 
-def card_action_regex(action):
+def card_action_regex(action): #process basic card action text
         actual_action = basic_action_regex.match(action)
         amount = int(actual_action.group(1))
         act_type = actual_action.group(2)
+        #ex: "+2 Cards" -> 2, 'Cards'
         return (act_type, amount)
 
-def card_in_list(card, list_of_cards):
+def card_in_list(card, list_of_cards): #is a card in a given list of cards
     for x in list_of_cards:
+        #its necessary to compare types because we are comparing class instances
         if type(x) is type(card):
             return True
     return False
@@ -31,53 +33,68 @@ def card_in_list(card, list_of_cards):
 
 # Game Classes:
 
-class Game:
-    def __init__(self, my_players, my_shop):
+class Game: #manages everything relating to the game itself, contains instances of all other classes 
+    def __init__(self, my_players, my_shop): #pass in a list of initialized players and an initialized shop
         self.players = my_players
-        
         self.num_players = len(self.players)
+        #trash pile starts empty
         self.trash = []
+        #first player in list gets to go first
         self.active_player = self.players[0]
         self.active_player_number = 0
         self.shop = my_shop
+        #flag that is updated to True when a game-ending condition occurs
         self.game_over = False
-        self.empty_piles_needed = 4
+        #How many empty piles are needed in the shop to end the game
+        self.empty_piles_needed = 3
 
-    def play_card(self, card):
+    def play_card(self, card): #manages changing the game state to reflect a player playing a card
+        #remove the card from the players hand and put it in play
         self.active_player.my_deck.hand.remove(card)
         self.active_player.my_deck.in_play.append(card)
+        #if the card is an attack card, we need to process it's attack function
         if card.is_attack:
             self.process_card_actions(card.actions, card.additional_action)
             self.process_attack(card.attack_fn)
         else:
+            #process the card's action text
             self.process_card_actions(card.actions, card.additional_action)
 
-    def buy_card(self, card):
+    def buy_card(self, card): #manage changing the game state to reflect a player buying a card
+        #get the cards currently in the shops supply 
         for_sale = self.shop.supply
-        if for_sale[card.name][1] != 0:
+        #if the card is available (if it is passed to this function it should ALWAYS be), subtract 1 from its quantity
+        if for_sale[card.name][1]:
             for_sale[card.name][1] -= 1
-            if for_sale[card.name][1] == 0:
+            #if there are no more cards of that type available after subtracting 1 from its quantity,
+            #increse the empty piles counter by 1
+            if not for_sale[card.name][1]:
                 self.shop.empty_piles += 1
+        #province is a special case, since as soon as provinces are depleted the game ends
         if card.name == 'province':
-            if for_sale['province'][1] == 0:
+            if not for_sale['province'][1]:
+                #set the game_over flag to reflect that a game-ending condition has been met
                 self.game_over = True
     
-    def trash_card(self, card):
+    def trash_card(self, card): #manage changing the game state to reflect a player trashing a card
+        #remove the given card from the active player's hand and put it in the trash pile
         self.active_player.my_deck.hand.remove(card)
         self.trash += [card]
 
-    def gain_to_hand(self, card):
+    def gain_to_hand(self, card): #manage changing the game state to reflect a player gaining a card to their hand
         self.active_player.my_deck.hand += [card]
 
-    
-    def gain(self, card):
+    def gain(self, card): #manage changing the game state to reflect a player gaining a card to their dicard pile
         self.active_player.my_deck.discard_pile += [card]
 
-    def process_card_actions(self, actions, additional_action):
+    def process_card_actions(self, actions, additional_action): #process card text -> execute corresponding game actions
+        # look at each basic action within a card's text 
         for x in actions:
+            #for basic actions, process the card text using regex
             action_processed = card_action_regex(x)
             action_text = action_processed[0]
             action_amnt = action_processed[1]
+            #match the card text with a basic game action
             if action_text == 'Card' or action_text == 'Cards':
                 self.active_player.my_deck.draw(action_amnt)
             elif action_text == 'Buy' or action_text == 'Buys':
@@ -86,6 +103,7 @@ class Game:
                 self.active_player.actions += action_amnt
             elif action_text == 'Coin' or action_text == 'Coins':
                 self.active_player.coins += action_amnt
+        #if there is an additional action function for this card, call it
         if additional_action != None:
             additional_action(self)
 
@@ -486,17 +504,5 @@ class Gardens(Card):
 class Laboratory(Card):
     def __init__(self):
         super().__init__(['+2 Cards', '+1 Action'], 5, 0, 0, None, False, None, False, None, 'laboratory')
-
-# def library_action(my_game):
-#     while(len(my_game.active_player.my_deck.hand) < 7):
-#         if my_game.active_player.my_deck.draw_pile == []:
-#             my_game.active_player.my_deck.shuffle()
-#         targ_card = my_game.active_player.ai.draw_or_discard_from_deck_fn(my_game, my_game.active_player, None, False)
-#         if targ_card.name != 'error':
-#             my_game.active_player.my_deck.hand += [targ_card]
-
-# class Library(Card):
-#     def __init__(self):
-#         super().__init__([], 5, 0, 0, library_action, False, None, False, None, 'library')
 
 # -/

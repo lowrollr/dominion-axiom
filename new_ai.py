@@ -1,7 +1,7 @@
 import sys
 
 ai_name = sys.argv[1]
-
+#this generates a skeleton for an ai scheme
 f=open("./axiom/ai_plugins/" + ai_name + ".py", "w")
 
 f.write("from game import *\n")
