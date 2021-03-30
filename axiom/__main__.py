@@ -14,7 +14,7 @@ if __name__ == '__main__':
         else:
             player_types = []
             for x in range(num_players):
-                player_types += [sys.argv[x+2]]
+                player_types.append(sys.argv[x+2])
             num_games = int(sys.argv[2 + num_players])
             print("simulating " + str(num_games) + " games")
             deck_preset = sys.argv[3 + num_players]

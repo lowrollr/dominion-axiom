@@ -117,7 +117,7 @@ class Common_Sense(AI):
             not_actions = []
             for x in available_cards:
                 if not x.actions and not x.additional_action and not x.attack_fn:
-                    not_actions += [x]
+                    not_actions.append(x)
             if _optional:
                 return ImaginaryCard()  
             else:

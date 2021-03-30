@@ -41,7 +41,7 @@ class Miser(AI):
         for x in stip_cards:
             for y in cards_available:
                 if type(x) is type(y):
-                    list_of_cards += [x]
+                    list_of_cards.append(x)
         #if a Province is available, buy a Province, if not buy a Gold, if not buy a Silver
         if card_in_list(Province(), list_of_cards):
             return Province()

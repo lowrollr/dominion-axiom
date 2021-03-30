@@ -44,7 +44,7 @@ def import_deck(deck_name): #load a deck preset specified by the user at runtime
         card_name = elem_split[1].rstrip()
         card = eval(card_name.title() + '()')
         for x in range(0, int(card_amnt)):
-            starting_cards += [card]
+            starting_cards.append(card)
     deck_file.close()
     #return a Deck object containing the cards specified in the deck preset file
     return Deck(starting_cards)
@@ -78,7 +78,7 @@ def start_game(num_players, player_types, deck_preset, shop_preset): #start a si
         ai_type = import_AI(player_types[x])
         if ai_type:
             #initialize Player with default starting deck, and imported AI scheme
-            game_players += [Player(copy.deepcopy(import_deck(deck_preset)), 'player' + str(x), ai_type(str(ai_type).split('.')[1]))]    
+            game_players.append(Player(copy.deepcopy(import_deck(deck_preset)), 'player' + str(x), ai_type(str(ai_type).split('.')[1])))    
             #add the AI scheme the Player is using to the ai_types set      
             ai_types.add(str(ai_type).split('.')[1])
     #initialize game Shop and import the shop preset used for this simulation
@@ -100,7 +100,7 @@ def simulate_games(num_players, player_types, num_games, deck_preset, shop_prese
         if not i:
             global ai_types
             for x in ai_types:
-                ai_scores += [[x, []]]
+                ai_scores.append([x, []])
         #have each player in the game join and draw their starting hand after their deck is shuffled
         for x in game.players:
             x.join_game(game)
@@ -118,7 +118,7 @@ def simulate_games(num_players, player_types, num_games, deck_preset, shop_prese
         for x in ai_scores:
             for y in game.players:
                 if y.ai.name == x[0]:
-                    x[1] += [[y.count_points(), y.my_deck.get_all_card_names()]]
+                    x[1].append([y.count_points(), y.my_deck.get_all_card_names()])
 
     #sort the score/deck pairs for each AI scheme by highest score
     for x in ai_scores:
@@ -127,7 +127,7 @@ def simulate_games(num_players, player_types, num_games, deck_preset, shop_prese
     #sum up total scores for each AI scheme and report the average
     ai_sums = []
     for x in ai_scores:
-        ai_sums += [0]
+        ai_sums.append(0)
         for y in range(len(x[1])):
             ai_sums[-1] += x[1][y][0]
         print(str(x[0] + " average score = " + str(ai_sums[-1]/len(x[1]))))

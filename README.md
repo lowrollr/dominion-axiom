@@ -186,7 +186,7 @@ def buy_fn(self, _game, _player, _stip, _optional):
         for x in stip_cards:
             for y in cards_available:
                 if type(x) is type(y):
-                    list_of_cards += [x]
+                    list_of_cards.append(x)
 
         if card_in_list(Province(), list_of_cards):
             return Province()
@@ -218,7 +218,7 @@ list_of_cards = []
 for x in stip_cards:
     for y in cards_available:
         if type(x) is type(y):
-            list_of_cards += [x]
+            list_of_cards.append(x)
 ```
 This simply defines list_of_cards as the list of cards that we are interested in buying, essentially the intersection of stip_cards and cards_available.
 ```python

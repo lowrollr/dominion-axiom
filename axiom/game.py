@@ -79,13 +79,13 @@ class Game: #manages everything relating to the game itself, contains instances 
     def trash_card(self, card): #manage changing the game state to reflect a player trashing a card
         #remove the given card from the active player's hand and put it in the trash pile
         self.active_player.my_deck.hand.remove(card)
-        self.trash += [card]
+        self.trash.append(card)
 
     def gain_to_hand(self, card): #manage changing the game state to reflect a player gaining a card to their hand
-        self.active_player.my_deck.hand += [card]
+        self.active_player.my_deck.hand.append(card)
 
     def gain(self, card): #manage changing the game state to reflect a player gaining a card to their dicard pile
-        self.active_player.my_deck.discard_pile += [card]
+        self.active_player.my_deck.discard_pile.append(card)
 
     def process_card_actions(self, actions, additional_action): #process card text -> execute corresponding game actions
         # look at each basic action within a card's text 
@@ -162,7 +162,7 @@ class Shop: #manages everything related exclusively to the game's shop
             if self.supply[x][1] > 0:
                 #check if the card's cost is less than or equals to the given amount of coins
                 if self.supply[x][0].cost <= amount:
-                    cards_under_amount += [self.supply[x][0]]
+                    cards_under_amount.append(self.supply[x][0])
         return cards_under_amount
     
     def reset_shop(self): #reset the shop to its starting configuration
@@ -257,7 +257,7 @@ class Player: #manages everything related exclusively to a specific player
                 #decrease the amount of buys available this turn
                 self.buys -= 1
                 #place the bought card in the discard pile
-                self.my_deck.discard_pile += [card_to_buy]
+                self.my_deck.discard_pile.append(card_to_buy)
                 #continue to buy cards (if possible)
                 self.buy_cards()
 
@@ -266,7 +266,7 @@ class Player: #manages everything related exclusively to a specific player
         #get all treasures in the player's hand
         for x in self.my_deck.hand:
             if x.worth:
-                my_treasures += [x]
+                my_treasures.append(x)
         #move them to in_play
         for x in my_treasures:
             self.my_deck.hand.remove(x)
@@ -323,13 +323,13 @@ class Deck: #manages everything related exclusively to a specific Deck
             #if the draw pile is still empty a card can't be drawn!
             if self.draw_pile != []:
                 #put the top card of the draw pile into the hand
-                self.hand += [self.draw_pile.pop()]
+                self.hand.append(self.draw_pile.pop())
             
     def discard(self, card): #discard a card
         #remove the card from the hand
         self.hand.remove(card)
         #place it in the discard pile
-        self.discard_pile += [card]
+        self.discard_pile.append(card)
 
     def place(self, card, offset): #place a card in a specific part of the deck (offset from top)
         self.draw_pile.insert(offset, card)
@@ -345,20 +345,20 @@ class Deck: #manages everything related exclusively to a specific Deck
         my_hand_actions = []
         for x in self.hand:
             if x.actions != None:
-                my_hand_actions += [x]
+                my_hand_actions.append(x)
         return my_hand_actions
 
     def get_reactions_in_hand(self): #get all reaction cards in a player's hand
         my_hand_reactions = []
         for x in self.hand:
             if x.is_reaction:
-                my_hand_reactions += [x]
+                my_hand_reactions.append(x)
         return my_hand_reactions
 
     def get_all_card_names(self): #get the names of all cards in a player's deck
         card_names = []
         for x in self.hand + self.draw_pile + self.discard_pile:
-            card_names += [x.name]
+            card_names .append(x.name)
         return card_names
 
 
@@ -410,7 +410,7 @@ def cellar_action(my_game): #additional action text: "Discard any number of card
     targ_card = my_game.active_player.ai.discard_fn(my_game, my_game.active_player, None, True)
     #keep discarding cards as long as the player keeps choosing to discard
     while targ_card.name != 'error':
-        cards_to_discard += [targ_card]
+        cards_to_discard .append(targ_card)
         #discard the given card
         cur_player.my_deck.discard(targ_card)
         #get an additional card to discard
@@ -451,7 +451,7 @@ def mine_stip(cards): #stipulation = card trashed must be a treasure
     #get all treasures in the given list of carrds
     for x in cards:
         if x.worth:
-            filtered += [x]
+            filtered .append(x)
     return filtered
 
 def mine_action(my_game): #additional action text: "Trash a Treasure card from your hand. Gain a Treasure card costing up to 3 more; put it into your hand."
@@ -488,7 +488,7 @@ def remodel_action(my_game): #additional action text: "Trash a card from your ha
         #get all cards that fulfill the stipulation
         for x in cards:
             if x.cost <= card_to_trash.cost + 2:
-                filtered += [x]
+                filtered.append(x)
         return filtered
     #player chooses a card to gain out of the cards that fulfill the stipulation
     card_to_gain =  my_game.active_player.ai.gain_fn(my_game, my_game.active_player, remodel_stip, False)
@@ -511,7 +511,7 @@ def workshop_action(my_game): #additional action text: "Gain a card costing up t
         filtered = []
         for x in cards:
             if x.cost <= 4:
-                filtered += [x]
+                filtered.append(x)
         return filtered
     #player chooses a card to gain that costs less than 4
     card_to_gain =  my_game.active_player.ai.gain_fn(my_game, my_game.active_player, workshop_stip, False)
@@ -526,7 +526,7 @@ def artisan_action(my_game): #additional action text: "Gain a card to your hand 
         filtered = []
         for x in cards:
             if x.cost <= 5:
-                filtered += [x]
+                filtered.append(x)
         return filtered
     #player chooses a card to gain that costs 5 or less
     card_to_gain =  my_game.active_player.ai.gain_fn(my_game, my_game.active_player, artisan_stip, False)
@@ -551,10 +551,10 @@ def bandit_attack(my_game, target_player): #attack text: "Each other player reve
             #trash the card if it has worth (is a treasure) but is not a Copper
             if targ_card.worth and type(targ_card) != type(Copper()):
                 #put the card in the trash pile
-                my_game.trash += [targ_card]
+                my_game.trash.append(targ_card)
             else:
                 #if it doesn't fulfill the condition, instead put the card in the player's discard pile
-                target_player.my_deck.discard_pile += [targ_card]
+                target_player.my_deck.discard_pile.append(targ_card)
 
 class Bandit(Card):
     def __init__(self):
